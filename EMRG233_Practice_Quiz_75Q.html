@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EMRG 233 Midterm Practice Quiz (75 Q)</title>
+<style>
+  :root{
+    --bg:#0b0f14;
+    --card:#111926;
+    --muted:#8aa4bf;
+    --text:#eaf2ff;
+    --accent:#6aa6ff;
+    --accent2:#00d492;
+    --wrong:#ff6b6b;
+    --right:#00d492;
+  }
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;line-height:1.45}
+  .wrap{max-width:1000px;margin:24px auto;padding:0 16px 48px}
+  header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
+  h1{font-size:clamp(1.2rem,2vw+1rem,2rem);margin:0;color:var(--text)}
+  .badge{background:linear-gradient(135deg,var(--accent),#8ec5ff);color:#001428;border-radius:999px;padding:6px 10px;font-weight:700;font-size:.85rem}
+  .card{background:linear-gradient(180deg,#121a26 0%, #0f1621 100%);border:1px solid #1e2a3a;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);padding:18px}
+  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0 16px}
+  select,button,input[type="text"]{background:#0d1420;border:1px solid #223049;color:var(--text);padding:10px 12px;border-radius:10px;font-size:0.95rem}
+  button{cursor:pointer}
+  button.primary{background:linear-gradient(135deg,var(--accent),#8ec5ff);color:#001428;border:none;font-weight:800}
+  button.secondary{background:linear-gradient(135deg,#1f2b3e,#1a2637);border:1px solid #223049}
+  button.ghost{background:transparent;border:1px dashed #2a3b58;color:var(--muted)}
+  .muted{color:var(--muted);font-size:.95rem}
+  .q{margin:14px 0 0; border-top:1px dashed #26354e;padding-top:16px}
+  .qid{font-weight:700;color:#9fc2ff;font-size:.9rem;margin-bottom:6px}
+  .qtext{font-weight:700;margin-bottom:10px}
+  .opts{display:grid;gap:8px}
+  label.opt{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;background:#0d1420;border:1px solid #223049;border-radius:12px;padding:10px 12px;cursor:pointer}
+  input[type="radio"]{transform:translateY(4px)}
+  .status{margin-top:8px;font-size:.92rem}
+  .status.correct{color:var(--right)}
+  .status.wrong{color:var(--wrong)}
+  .pill{display:inline-block;border-radius:999px;padding:2px 8px;border:1px solid #2a3b58;color:#a9c6ff;font-size:.8rem}
+  details.feedback summary{cursor:pointer;color:#a9c6ff}
+  .summary{display:grid;gap:8px;margin:16px 0}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:800px){.grid-2{grid-template-columns:1fr}}
+  .score{font-size:1.2rem;font-weight:800}
+  .footer{margin-top:28px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+  .small{font-size:.85rem;color:#98b3d3}
+  .hidden{display:none}
+  .sep{height:1px;background:#1d2a3e;margin:16px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>EMRG 233 – Respiratory Emergencies • Practice Quiz</h1>
+    <span class="badge">75 Questions • Auto‑graded</span>
+  </header>
+
+  <div class="card">
+    <div class="controls">
+      <label>Question order:
+        <select id="orderSelect">
+          <option value="as-is">As written</option>
+          <option value="shuffle">Shuffle all</option>
+          <option value="by-section">Group by section</option>
+        </select>
+      </label>
+      <label>Mode:
+        <select id="modeSelect">
+          <option value="exam">Exam (feedback at end)</option>
+          <option value="study">Study (instant feedback)</option>
+        </select>
+      </label>
+      <label>Filter:
+        <select id="filterSelect">
+          <option value="all">All sections</option>
+          <option value="Anatomy">Anatomy & Physiology</option>
+          <option value="Assessment">Respiratory Assessment</option>
+          <option value="BLS">Airway Support / BLS</option>
+          <option value="Oxygen">Oxygen Therapy</option>
+          <option value="Meds">Respiratory Medications</option>
+        </select>
+      </label>
+      <label>Limit:
+        <select id="limitSelect">
+          <option value="0">No limit (all)</option>
+          <option value="10">10</option>
+          <option value="20">20</option>
+          <option value="30">30</option>
+          <option value="40">40</option>
+          <option value="50">50</option>
+          <option value="75">75</option>
+        </select>
+      </label>
+      <button class="secondary" id="buildBtn">Build Quiz</button>
+      <button class="ghost" id="resetBtn">Reset</button>
+    </div>
+    <div class="muted">Tip: Use <b>Study mode</b> for instant explanations, or <b>Exam mode</b> to get your score and review at the end. Set a limit to create bite‑size drills.</div>
+  </div>
+
+  <div id="quiz" class="card" style="margin-top:14px"></div>
+
+  <div id="actions" class="footer hidden">
+    <div class="grid-2" style="width:100%">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <button class="primary" id="submitBtn">Submit & Score</button>
+        <button class="secondary" id="reviewBtn">Toggle Review (show answers)</button>
+        <button class="ghost" id="restartBtn">Restart</button>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end">
+        <button class="secondary" id="exportBtn">Export Results (JSON)</button>
+        <button class="ghost" id="importBtn">Import Results</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="results" class="card hidden">
+    <div class="summary">
+      <div class="score" id="scoreText"></div>
+      <div id="bySection"></div>
+    </div>
+    <div class="sep"></div>
+    <details open>
+      <summary><b>Review: Answers & Explanations</b></summary>
+      <div id="reviewBlock" style="margin-top:10px"></div>
+    </details>
+  </div>
+
+  <div class="small" style="margin-top:16px">
+    This quiz file is self‑contained. You can host it anywhere (GitHub Pages, Netlify, or any web host). © You.
+  </div>
+</div>
+
+<script>
+/** ========== Question Bank (75) ==========
+Each item:
+{ id, section, text, options:[...], answer:index, rationale:"..." }
+Sections: Anatomy, Assessment, BLS, Oxygen, Meds
+*/
+
+const Q = [
+  // === Original 25 (1–25) ===
+  {id:1, section:"Anatomy", text:"Which law states that when temperature is constant, the pressure of a gas varies inversely with its volume?", options:["Dalton’s Law","Boyle’s Law","Henry’s Law","Charles’ Law"], answer:1, rationale:"Boyle’s Law: P ∝ 1/V at constant temperature."},
+  {id:2, section:"Anatomy", text:"The epiglottis prevents:", options:["Air from entering the stomach","Food from entering the lungs","Oxygen exchange","Sinus drainage"], answer:1, rationale:"It covers the glottic opening during swallowing to prevent aspiration."},
+  {id:3, section:"Anatomy", text:"Which structure marks the transition between the upper and lower airway?", options:["Pharynx","Glottis","Trachea","Carina"], answer:1, rationale:"The glottis (between the vocal cords) is the functional boundary."},
+  {id:4, section:"Anatomy", text:"The alveoli are the primary site of:", options:["Air filtration","Mucous production","Gas exchange","Humidification"], answer:2, rationale:"Gas exchange occurs across the alveolar-capillary membrane."},
+  {id:5, section:"Anatomy", text:"Normal tidal volume in an adult male is approximately:", options:["150 mL","350 mL","500 mL","1 L"], answer:2, rationale:"≈ 5–7 mL/kg, around 500 mL for an average adult."},
+  {id:6, section:"Anatomy", text:"Which gas law explains how nitrogen dissolves into the bloodstream during scuba diving?", options:["Boyle’s","Dalton’s","Henry’s","Charles’"], answer:2, rationale:"Henry’s Law governs gas dissolved in liquids as a function of partial pressure."},
+  {id:7, section:"Anatomy", text:"The right lung has how many lobes?", options:["2","3","4","5"], answer:1, rationale:"Right = 3 lobes; Left = 2 lobes."},
+  {id:8, section:"Anatomy", text:"Which of the following decreases hemoglobin’s affinity for oxygen (right shift)?", options:["Low CO₂, Low Temp","High pH","High CO₂, High Temp","Low BPG"], answer:2, rationale:"Increased CO₂/temperature and low pH shift the curve right."},
+  {id:9, section:"Anatomy", text:"External respiration occurs between:", options:["Alveoli and pulmonary capillaries","Blood and tissue cells","Hemoglobin and myoglobin","Right and left atrium"], answer:0, rationale:"External = lungs; Internal = tissues."},
+  {id:10, section:"Anatomy", text:"The primary drive to breathe in a healthy person is caused by rising levels of:", options:["Oxygen","Nitrogen","Carbon Dioxide","Hydrogen"], answer:2, rationale:"Central chemoreceptors respond to CO₂ (via H⁺)."},
+
+  {id:11, section:"Assessment", text:"Tactile fremitus assesses:", options:["Temperature of skin","Vibration transmission through lungs","Airway patency","Capillary refill"], answer:1, rationale:"Palpable vibrations indicate density changes (↓ in effusion/pneumothorax)."},
+  {id:12, section:"Assessment", text:"Dullness on percussion of the lung fields suggests:", options:["Air trapping","Fluid or solid mass","Collapsed alveoli","Normal lungs"], answer:1, rationale:"Dullness = consolidation/effusion; Resonance = normal."},
+  {id:13, section:"Assessment", text:"Which lung sound is high‑pitched, musical, and heard mostly on expiration?", options:["Rhonchi","Crackles","Wheezes","Stridor"], answer:2, rationale:"Wheezes imply narrowed lower airways."},
+  {id:14, section:"Assessment", text:"Normal diaphragmatic excursion is approximately:", options:["1–2 cm","3–6 cm","7–10 cm","10–12 cm"], answer:1, rationale:"Typically 3–6 cm; may be larger in very fit individuals."},
+  {id:15, section:"Assessment", text:"Tripod position and two‑word sentences suggest:", options:["Mild distress","Severe respiratory distress","Cardiac arrest","Normal breathing"], answer:1, rationale:"These are classic signs of severe respiratory difficulty."},
+
+  {id:16, section:"BLS", text:"The OPA should be used only in patients who:", options:["Are conscious with gag","Are unconscious without gag","Have facial trauma","Are pediatric only"], answer:1, rationale:"OPA contraindicated if gag reflex present."},
+  {id:17, section:"BLS", text:"Maximum suction duration for an adult is:", options:["5 sec","10 sec","15 sec","30 sec"], answer:2, rationale:"Adults 15 s; children 10 s; infants 5 s."},
+  {id:18, section:"BLS", text:"Correct NPA measurement is from the:", options:["Corner of mouth to earlobe","Nose tip to earlobe","Nose to jaw angle","Mouth to jaw angle"], answer:1, rationale:"Measure nares to earlobe; insert along nasal floor."},
+  {id:19, section:"BLS", text:"CPR with suspected obstruction: after attempts to ventilate fail, next step is:", options:["Try two more breaths","Perform abdominal thrusts","Resume chest compressions","Insert OPA"], answer:2, rationale:"Resume compressions; check airway before giving breaths each cycle."},
+
+  {id:20, section:"Oxygen", text:"A nasal cannula at 2 L/min delivers approximately:", options:["24% FiO₂","28%","36%","44%"], answer:0, rationale:"Rule of thumb: 1 L ≈ 24%, +4% per L up to ~44%."},
+  {id:21, section:"Oxygen", text:"Replace an oxygen cylinder when pressure drops to:", options:["300 psi","250 psi","200 psi","150 psi"], answer:2, rationale:"200 psi is safe residual."},
+  {id:22, section:"Oxygen", text:"Which device provides the highest FiO₂ without positive pressure?", options:["Simple mask","Nasal cannula","Non‑rebreather mask","Venturi mask"], answer:2, rationale:"NRB provides ~90–100% with good seal/reservoir."},
+
+  {id:23, section:"Meds", text:"Salbutamol (Ventolin) acts primarily by:", options:["Blocking beta‑receptors","Stimulating β₂ receptors → bronchodilation","Decreasing mucus production","Sedating respiratory centers"], answer:1, rationale:"β₂ agonist relaxes bronchial smooth muscle."},
+  {id:24, section:"Meds", text:"Ipratropium bromide (Atrovent) is classified as:", options:["Corticosteroid","Anticholinergic bronchodilator","Beta agonist","Diuretic"], answer:1, rationale:"Muscarinic antagonist → bronchodilation."},
+  {id:25, section:"Meds", text:"True or False: In respiratory distress, oxygen should always be withheld from COPD patients until SpO₂ < 88%.", options:["True","False"], answer:1, rationale:"Do not withhold O₂ in distress; titrate to target saturations."},
+
+  // === New 50 (26–75) ===
+  {id:26, section:"Anatomy", text:"Which structure divides the nasopharynx into two passages?", options:["Uvula","Turbinates","Nasal septum","Hard palate"], answer:2, rationale:"The nasal septum creates right/left nasal passages."},
+  {id:27, section:"Anatomy", text:"The space between the base of the tongue and the epiglottis is the:", options:["Glottis","Vallecula","Pharynx","Arytenoid notch"], answer:1, rationale:"Vallecula is a key intubation landmark."},
+  {id:28, section:"Anatomy", text:"The cricoid cartilage is unique because it:", options:["Is the largest cartilage","Is the only complete ring in the airway","Forms the vocal cords","Sits above the thyroid cartilage"], answer:1, rationale:"Only complete ring of cartilage in upper airway."},
+  {id:29, section:"Anatomy", text:"Which structure marks the end of the trachea?", options:["Glottis","Bronchioles","Carina","Larynx"], answer:2, rationale:"Carina is the bifurcation into main bronchi."},
+  {id:30, section:"Anatomy", text:"Which pleura lines the inside of the thoracic cavity?", options:["Visceral","Parietal","Mediastinal","Alveolar"], answer:1, rationale:"Parietal lines cavity; visceral covers lungs."},
+  {id:31, section:"Anatomy", text:"The diaphragm moves ________ during inspiration.", options:["Upward","Downward","Laterally","Not at all"], answer:1, rationale:"It contracts and flattens downward."},
+  {id:32, section:"Anatomy", text:"Which gas makes up the greatest percentage of atmospheric air?", options:["Oxygen","Carbon dioxide","Nitrogen","Argon"], answer:2, rationale:"Nitrogen ≈ 79% of dry air."},
+  {id:33, section:"Anatomy", text:"Primary site of gas exchange in the lungs:", options:["Bronchioles","Alveoli","Trachea","Pleural space"], answer:1, rationale:"Alveoli with vast surface area and thin membrane."},
+  {id:34, section:"Anatomy", text:"Surfactant helps to:", options:["Increase airway resistance","Decrease surface tension","Promote mucus production","Thicken alveolar walls"], answer:1, rationale:"Prevents alveolar collapse (atelectasis)."},
+  {id:35, section:"Anatomy", text:"For effective diffusion the alveolar-capillary membrane must be:", options:["Thick and rigid","Dry and thin","Moist and thin","Inflamed and expanded"], answer:2, rationale:"Moist & thin allows rapid diffusion."},
+  {id:36, section:"Anatomy", text:"Approximate alveolar PO₂ (PaO₂) in healthy lungs:", options:["100 mmHg","160 mmHg","80 mmHg","60 mmHg"], answer:0, rationale:"~100 mmHg in alveoli/arterial blood at sea level."},
+  {id:37, section:"Anatomy", text:"Which law: total pressure equals sum of partial pressures?", options:["Boyle’s","Dalton’s","Henry’s","Charles’"], answer:1, rationale:"Dalton’s Law."},
+  {id:38, section:"Anatomy", text:"Air remaining after maximal exhalation is:", options:["Expiratory reserve volume","Residual volume","Functional capacity","Tidal volume"], answer:1, rationale:"Residual volume cannot be exhaled."},
+  {id:39, section:"Anatomy", text:"Hypoxia due to low hemoglobin concentration:", options:["Hypoxic","Anemic","Stagnant","Histotoxic"], answer:1, rationale:"Anemic hypoxia = reduced O₂ carrying capacity."},
+  {id:40, section:"Anatomy", text:"The medulla primarily controls:", options:["Respiratory rhythm","Rate only","Gas exchange","Blood oxygen content"], answer:0, rationale:"Medullary centers generate rhythm; pons modulates."},
+  {id:41, section:"Anatomy", text:"Low pH (↑H⁺) typically causes ventilation to:", options:["Slow","Stop","Increase","Stay the same"], answer:2, rationale:"Compensatory hyperventilation lowers CO₂."},
+  {id:42, section:"Anatomy", text:"Which muscles assist with forced exhalation?", options:["Diaphragm","External intercostals","Abdominal muscles","Scalene"], answer:2, rationale:"Abdominals/internal intercostals in active exhalation."},
+  {id:43, section:"Anatomy", text:"Intrapleural pressure during inspiration becomes:", options:["Positive","Equal to atmospheric","More negative","Unchanged"], answer:2, rationale:"More negative → lung expansion."},
+  {id:44, section:"Anatomy", text:"The carina is located near which vertebral level?", options:["C5","T5","T7","L1"], answer:1, rationale:"Around T5/T6 level."},
+  {id:45, section:"Anatomy", text:"FiO₂ of room air is:", options:["16%","21%","25%","30%"], answer:1, rationale:"Room air ~21% oxygen."},
+
+  {id:46, section:"Assessment", text:"Which step is performed first in a respiratory assessment?", options:["Auscultation","Inspection","Percussion","Palpation"], answer:1, rationale:"Look first: work of breathing, symmetry, distress."},
+  {id:47, section:"Assessment", text:"Bilateral basal crackles most likely indicate:", options:["Airway obstruction","Bronchospasm","Pulmonary edema","Pneumothorax"], answer:2, rationale:"Fluid in alveoli = crackles; common in CHF."},
+  {id:48, section:"Assessment", text:"A trachea shifted to the left may indicate:", options:["Right‑sided tension pneumothorax","Left lung collapse","Left consolidation","Pleural effusion"], answer:0, rationale:"Tension pushes mediastinum away from affected side."},
+  {id:49, section:"Assessment", text:"For chest expansion palpation place hands:", options:["Over the clavicles","On anterior chest","At T10 level, thumbs together","On upper abdomen"], answer:2, rationale:"Thumbs at T10, observe separation with inspiration."},
+  {id:50, section:"Assessment", text:"A resonant percussion note indicates:", options:["Normal air‑filled lung","Fluid","Mass","Bone"], answer:0, rationale:"Resonant = healthy aerated lung."},
+  {id:51, section:"Assessment", text:"Wheezing is most associated with:", options:["Pneumonia","Asthma","Pulmonary edema","Pneumothorax"], answer:1, rationale:"Lower airway narrowing; also COPD."},
+  {id:52, section:"Assessment", text:"Central/peripheral cyanosis suggests:", options:["Adequate oxygenation","Hypoxemia","Hyperventilation","Hypercapnia"], answer:1, rationale:"Blue lips/nails = low SaO₂."},
+  {id:53, section:"Assessment", text:"Orthopnea means:", options:["SOB when lying flat","Rapid breathing","Painful breathing","Shallow breathing"], answer:0, rationale:"Often due to fluid redistribution in CHF."},
+  {id:54, section:"Assessment", text:"Equal but diminished sounds bilaterally could suggest:", options:["Bronchospasm","Obstruction","Hypoventilation","Consolidation"], answer:2, rationale:"Shallow breaths in fatigue/CNS depression."},
+  {id:55, section:"Assessment", text:"Coarse crackles are commonly heard in:", options:["Asthma","COPD exacerbations","Early CHF","Pulmonary embolism"], answer:2, rationale:"Fluid overload; coarse vs fine rales."},
+
+  {id:56, section:"BLS", text:"Most common anatomical cause of airway obstruction in an unconscious patient:", options:["Tongue","Uvula","Epiglottis","Soft palate"], answer:0, rationale:"Loss of tone allows tongue to occlude pharynx."},
+  {id:57, section:"BLS", text:"Insert an OPA initially:", options:["Curved down","Curved up then rotate 180°","Sideways","Flat against tongue"], answer:1, rationale:"Prevents pushing tongue posteriorly (or use tongue depressor)."},
+  {id:58, section:"BLS", text:"The NPA should be inserted into:", options:["Mouth","Larger nostril along floor","Smaller nostril","Either nostril with most resistance"], answer:1, rationale:"Lubricated, bevel toward septum; avoid basilar skull fracture."},
+  {id:59, section:"BLS", text:"When using a BVM, each ventilation should last:", options:["0.5 sec","1 sec","3 sec","5 sec"], answer:1, rationale:"Deliver over ~1 second watching for chest rise."},
+  {id:60, section:"BLS", text:"Correct ventilation rate for apneic adult with pulse:", options:["6–8/min","8–10/min","10–12/min","20–24/min"], answer:2, rationale:"About every 5–6 seconds."},
+  {id:61, section:"BLS", text:"Oxygen tank safe residual pressure is:", options:["100 psi","200 psi","300 psi","400 psi"], answer:1, rationale:"Change tanks at ~200 psi."},
+  {id:62, section:"BLS", text:"Most reliable sign of effective BVM ventilation:", options:["Air leak","Visible chest rise","Bubbling sound","Mask noise"], answer:1, rationale:"Chest rise = air entering lungs."},
+  {id:63, section:"BLS", text:"In suspected spinal injury, open airway with:", options:["Head tilt–chin lift","Jaw thrust","Triple airway","Head flexion"], answer:1, rationale:"Jaw thrust minimizes cervical movement."},
+  {id:64, section:"BLS", text:"Apply suction:", options:["While inserting catheter","While withdrawing catheter","Continuously","For ≥30 seconds"], answer:1, rationale:"Avoid hypoxia; adults ≤15 s per pass."},
+  {id:65, section:"BLS", text:"For a conscious choking adult, perform abdominal thrusts until:", options:["Patient is tired","Object expelled or patient unresponsive","5 cycles completed","Airway cleared"], answer:1, rationale:"Continue until resolution or deterioration."},
+
+  {id:66, section:"Oxygen", text:"FiO₂ for simple mask at ~8 L/min:", options:["28%","40–60%","70–90%","100%"], answer:1, rationale:"Simple mask provides moderate FiO₂."},
+  {id:67, section:"Oxygen", text:"Nasal cannula >6 L/min is not recommended because:", options:["Causes CO₂ retention","Causes mucosal drying and minimal added FiO₂","Exceeds tank limit","Delivers 100% oxygen"], answer:1, rationale:"High flows are uncomfortable and add little FiO₂."},
+  {id:68, section:"Oxygen", text:"Venturi mask is used primarily for:", options:["Precise oxygen delivery","High humidity","Unconscious patients","CO poisoning"], answer:0, rationale:"Fixed performance, titratable FiO₂."},
+  {id:69, section:"Oxygen", text:"When calculating tank duration, always subtract:", options:["100 psi","200 psi","300 psi","500 psi"], answer:1, rationale:"Subtract safe residual (200 psi)."},
+  {id:70, section:"Oxygen", text:"A patient on an NRB at 15 L/min receives approximately:", options:["60%","70%","90–100%","120%"], answer:2, rationale:"NRB with reservoir approaches near 100% with good seal."},
+
+  {id:71, section:"Meds", text:"Main side effect of Salbutamol:", options:["Bradycardia","Tremor/tachycardia","Hypotension","Drowsiness"], answer:1, rationale:"β₂ agonism can cause tremors and tachycardia."},
+  {id:72, section:"Meds", text:"Ipratropium acts by:", options:["Stimulating β₂ receptors","Blocking muscarinic receptors","Blocking β₁ receptors","Increasing mucus production"], answer:1, rationale:"Anticholinergic/antimuscarinic bronchodilation."},
+  {id:73, section:"Meds", text:"Epinephrine is indicated for:", options:["Mild asthma","COPD maintenance","Anaphylaxis with airway involvement","Stable angina"], answer:2, rationale:"Treats life‑threatening bronchospasm/airway edema."},
+  {id:74, section:"Meds", text:"Oxygen should be titrated to maintain SpO₂:", options:["80–85%","86–90%","94–98%","Always 100%"], answer:2, rationale:"Most adults target 94–98% unless special cases."},
+  {id:75, section:"Meds", text:"A home‑O₂ patient reports a headache; this may indicate:", options:["Hypoxia","CO₂ retention","Infection","Hypoglycemia"], answer:1, rationale:"Hypoventilation/hypercapnia can cause headaches."},
+];
+
+// Utilities
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];} return arr; }
+function el(tag, attrs={}, ...children){
+  const e=document.createElement(tag);
+  for(const k in attrs){
+    if(k==="class") e.className=attrs[k];
+    else if(k==="html") e.innerHTML=attrs[k];
+    else e.setAttribute(k, attrs[k]);
+  }
+  for(const c of children){
+    if(c==null) continue;
+    if(typeof c==="string") e.appendChild(document.createTextNode(c));
+    else e.appendChild(c);
+  }
+  return e;
+}
+
+let currentQuestions = [];
+let answers = {}; // id -> selected index
+let mode = "exam";
+let review = false;
+
+function buildQuiz(){
+  const orderSel = document.getElementById("orderSelect").value;
+  mode = document.getElementById("modeSelect").value;
+  const filter = document.getElementById("filterSelect").value;
+  const limit = parseInt(document.getElementById("limitSelect").value,10);
+
+  // filter
+  let pool = Q.filter(q => filter==="all" ? true : q.section===filter);
+  // order
+  if(orderSel==="shuffle"){ pool = shuffle([...pool]); }
+  else if(orderSel==="by-section"){
+    const groups = ["Anatomy","Assessment","BLS","Oxygen","Meds"];
+    pool = groups.flatMap(g => shuffle(pool.filter(q=>q.section===g)));
+  }
+  // limit
+  if(limit>0) pool = pool.slice(0, limit);
+
+  currentQuestions = pool;
+  answers = {};
+  review = false;
+  document.getElementById("results").classList.add("hidden");
+  document.getElementById("actions").classList.remove("hidden");
+  renderQuiz();
+}
+
+function renderQuiz(){
+  const wrap = el("div");
+  currentQuestions.forEach((q,idx)=>{
+    const qWrap = el("div", {class:"q", id:`q-${q.id}`});
+    const top = el("div", {class:"qid"}, `Q${idx+1} • ${q.section}`);
+    const text = el("div", {class:"qtext"}, q.text);
+    const opts = el("div", {class:"opts"});
+
+    q.options.forEach((opt,i)=>{
+      const rid = `q${q.id}-opt${i}`;
+      const inp = el("input", {type:"radio", name:`q${q.id}`, id:rid});
+      inp.addEventListener("change", ()=> {
+        answers[q.id] = i;
+        if(mode==="study"){
+          showInstantFeedback(q.id);
+        }
+      });
+      if(answers[q.id]===i) inp.checked=true;
+
+      const lbl = el("label", {class:"opt", for:rid},
+        inp,
+        el("div",{}, opt)
+      );
+      opts.appendChild(lbl);
+    });
+
+    const status = el("div", {class:"status", id:`st-${q.id}`});
+    const fb = el("details", {class:"feedback", id:`fb-${q.id}`},
+      el("summary",{},"Explanation"),
+      el("div", {class:"muted"}, q.rationale)
+    );
+    fb.open = false;
+
+    qWrap.append(top,text,opts,status,fb);
+    wrap.appendChild(qWrap);
+  });
+
+  const quiz = document.getElementById("quiz");
+  quiz.innerHTML="";
+  quiz.appendChild(wrap);
+}
+
+function showInstantFeedback(qid){
+  const q = currentQuestions.find(x=>x.id===qid);
+  const st = document.getElementById(`st-${qid}`);
+  const fb = document.getElementById(`fb-${qid}`);
+  if(answers[qid]===undefined){ st.textContent=""; st.className="status"; fb.open=false; return; }
+  if(answers[qid]===q.answer){
+    st.textContent = "✔ Correct";
+    st.className = "status correct";
+  }else{
+    st.textContent = `✖ Incorrect — Correct answer: ${String.fromCharCode(65+q.answer)}. ${q.options[q.answer]}`;
+    st.className = "status wrong";
+  }
+  fb.open = true;
+}
+
+function grade(){
+  let correct = 0;
+  let sections = {Anatomy:{c:0,t:0}, Assessment:{c:0,t:0}, BLS:{c:0,t:0}, Oxygen:{c:0,t:0}, Meds:{c:0,t:0}};
+  for(const q of currentQuestions){
+    sections[q.section].t++;
+    if(answers[q.id]===q.answer){ correct++; sections[q.section].c++; }
+  }
+  return {correct, total: currentQuestions.length, sections};
+}
+
+function submit(){
+  if(mode==="study"){
+    alert("You're in Study mode. Switch to Exam mode to submit and get a score.");
+    return;
+  }
+  // Mark unanswered visually
+  currentQuestions.forEach(q=>{
+    if(answers[q.id]===undefined){
+      const st = document.getElementById(`st-${q.id}`);
+      st.textContent = "⚠ No answer selected";
+      st.className = "status wrong";
+    }
+  });
+
+  const g = grade();
+  const pct = Math.round((g.correct / g.total) * 100);
+  document.getElementById("scoreText").textContent = `Score: ${g.correct}/${g.total} (${pct}%)`;
+
+  const secDiv = document.getElementById("bySection");
+  secDiv.innerHTML="";
+  const grid = el("div",{class:"grid-2"});
+  for(const [k,v] of Object.entries(g.sections)){
+    if(v.t===0) continue;
+    const p = Math.round((v.c/v.t)*100);
+    grid.appendChild(el("div",{class:"pill"}, `${k}: ${v.c}/${v.t} (${p}%)`));
+  }
+  secDiv.appendChild(grid);
+
+  const reviewBlock = document.getElementById("reviewBlock");
+  reviewBlock.innerHTML="";
+  currentQuestions.forEach((q,idx)=>{
+    const u = answers[q.id];
+    const row = el("div",{style:"margin:10px 0;padding:10px;border:1px solid #223049;border-radius:10px;background:#0d1420"});
+    const head = el("div",{}, `Q${idx+1} • ${q.text}`);
+    const ua = (u!==undefined) ? `${String.fromCharCode(65+u)}. ${q.options[u]}` : "—";
+    const ca = `${String.fromCharCode(65+q.answer)}. ${q.options[q.answer]}`;
+    const ok = (u===q.answer);
+    const line = el("div",{class: ok?"status correct":"status wrong"}, ok ? "✔ Correct" : "✖ Incorrect");
+    const your = el("div",{class:"muted"},"Your answer: ", ua);
+    const corr = el("div",{class:"muted"},"Correct answer: ", ca);
+    const why = el("div",{style:"margin-top:6px"}, q.rationale);
+    row.append(head,line,your,corr,why);
+    reviewBlock.appendChild(row);
+  });
+
+  document.getElementById("results").classList.remove("hidden");
+  // Auto-open all feedback details
+  currentQuestions.forEach(q=>{
+    const fb = document.getElementById(`fb-${q.id}`);
+    if(fb) fb.open = true;
+  });
+}
+
+function toggleReview(){
+  review = !review;
+  currentQuestions.forEach(q=>{
+    const st = document.getElementById(`st-${q.id}`);
+    const fb = document.getElementById(`fb-${q.id}`);
+    if(review){
+      const u = answers[q.id];
+      if(u===undefined){ st.textContent="⚠ No answer selected"; st.className="status wrong"; fb.open=true; }
+      else if(u===q.answer){ st.textContent="✔ Correct"; st.className="status correct"; fb.open=true; }
+      else { st.textContent=`✖ Incorrect — Correct: ${String.fromCharCode(65+q.answer)}. ${q.options[q.answer]}`; st.className="status wrong"; fb.open=true; }
+    }else{
+      st.textContent=""; st.className="status"; fb.open=false;
+    }
+  });
+}
+
+function restart(){
+  answers = {};
+  document.getElementById("results").classList.add("hidden");
+  renderQuiz();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function exportResults(){
+  const payload = {
+    mode,
+    responses: answers,
+    ids: currentQuestions.map(q=>q.id),
+    timestamp: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "emrg233_quiz_results.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importResults(){
+  const inp = document.createElement("input");
+  inp.type="file";
+  inp.accept=".json,application/json";
+  inp.onchange = e=>{
+    const f = e.target.files[0];
+    if(!f) return;
+    const fr = new FileReader();
+    fr.onload = ev=>{
+      try{
+        const data = JSON.parse(ev.target.result);
+        if(!data || !data.responses){ alert("Invalid results file."); return; }
+        answers = data.responses;
+        renderQuiz();
+        alert("Imported previous answers. You can submit or toggle review.");
+      }catch(err){
+        alert("Could not parse file.");
+      }
+    };
+    fr.readAsText(f);
+  };
+  inp.click();
+}
+
+// Wire up
+document.getElementById("buildBtn").addEventListener("click", buildQuiz);
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  document.getElementById("orderSelect").value="as-is";
+  document.getElementById("modeSelect").value="exam";
+  document.getElementById("filterSelect").value="all";
+  document.getElementById("limitSelect").value="0";
+  answers={}; currentQuestions=[];
+  document.getElementById("quiz").innerHTML="";
+  document.getElementById("actions").classList.add("hidden");
+  document.getElementById("results").classList.add("hidden");
+});
+document.getElementById("submitBtn").addEventListener("click", submit);
+document.getElementById("reviewBtn").addEventListener("click", toggleReview);
+document.getElementById("restartBtn").addEventListener("click", restart);
+document.getElementById("exportBtn").addEventListener("click", exportResults);
+document.getElementById("importBtn").addEventListener("click", importResults);
+
+// Build default quiz on load
+buildQuiz();
+</script>
+</body>
+</html>
